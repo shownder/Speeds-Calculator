@@ -15,29 +15,29 @@ local physicalH = math.round( (display.contentHeight - display.screenOriginY*2) 
 local storyboard = require( "storyboard" )
 local loadsave = require("loadsave")
 
-local licensing = require( "licensing" )
-licensing.init( "google" )
+-- local licensing = require( "licensing" )
+-- licensing.init( "google" )
 
-local function alertListener ( event )
-  if "clicked" == event.action then
+-- local function alertListener ( event )
+--   if "clicked" == event.action then
 
-    local i = event.index    
-    if i == 1 then
-      native.requestExit()
-    end        
-  end
-end
+--     local i = event.index    
+--     if i == 1 then
+--       native.requestExit()
+--     end        
+--   end
+-- end
 
-local function licensingListener( event )
+-- local function licensingListener( event )
 
-   local verified = event.isVerified
-   if not event.isVerified then
-      --failed verify app from the play store, we print a message
-      native.showAlert ( "Not Authorized", "Cannot authorize from Google Play.", { "Close" }, alertListener)
-   end
-end
+--    local verified = event.isVerified
+--    if not event.isVerified then
+--       --failed verify app from the play store, we print a message
+--       native.showAlert ( "Not Authorized", "Cannot authorize from Google Play.", { "Close" }, alertListener)
+--    end
+-- end
 
-licensing.verify( licensingListener )
+-- licensing.verify( licensingListener )
 
 local timesOpen = loadsave.loadTable("timesOpen.json")
 --timesOpen.opened = 0

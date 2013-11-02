@@ -108,7 +108,7 @@ function scene:createScene( event )
     loadsave.saveTable(storeSettings, "store.json")
   end
     -- storeSettings.sinePaid = false
-    -- storeSettings.speedPaid = false
+    -- storeSettings.trigPaid = false
     -- storeSettings.boltPaid = false
     -- loadsave.saveTable(storeSettings, "store.json")
 
@@ -258,7 +258,7 @@ speedButt = widget.newButton
 		boltButt:setEnabled(false)
 	end
 
-	if storeSettings.sinePaid and storeSettings.speedPaid and storeSettings.boltPaid then
+	if storeSettings.sinePaid and storeSettings.trigPaid and storeSettings.boltPaid then
 		storeButt.alpha = 0
 	end
 

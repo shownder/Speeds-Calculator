@@ -42,7 +42,7 @@ local function transactionCallback( event )
         sineButt:setEnabled(false)
         sineBuy.alpha = 0
       elseif whichOne[2] == product then
-        storeSettings.speedPaid = true
+        storeSettings.trigPaid = true
         speedButt.alpha = 0.50
         speedButt:setEnabled(false)
         speedBuy.alpha = 0
@@ -63,7 +63,7 @@ local function transactionCallback( event )
         sineButt:setEnabled(false)
         sineBuy.alpha = 0
       elseif whichOne[2] == product then
-        storeSettings.speedPaid = true
+        storeSettings.trigPaid = true
         speedButt.alpha = 0.50
         speedButt:setEnabled(false)
         speedBuy.alpha = 0
@@ -80,7 +80,7 @@ local function transactionCallback( event )
       if whichOne[1] == product then
         storeSettings.sinePaid = false
       elseif whichOne[2] == product then
-        storeSettings.speedPaid = false
+        storeSettings.trigPaid = false
       elseif whichOne[3] == product then
         storeSettings.boltPaid = false
       end
@@ -115,15 +115,15 @@ local function purchase( event )
     
     if event.target.num == 1 then
       print("Purchase Sine")
-      store.purchase({"com.trigonometry.iap.sine"})
+      store.purchase({"com.speedfeed.iap.sine"})
       --store.purchase({"android.test.purchased"})
     elseif event.target.num == 2 then
       print("Purchase Speed")
-      store.purchase({"com.trigonometry.iap.speed"})
+      store.purchase({"com.speedfeed.iap.trig"})
       --store.purchase({"android.test.canceled"})
     elseif event.target.num == 3 then
       print("Purchase Bolt")
-      store.purchase({"com.trigonometry.iap.bolt"})
+      store.purchase({"com.speedfeed.iap.bolt"})
       --store.purchase({"android.test.item_unavailable"})
     end
     
@@ -150,7 +150,7 @@ local function descSelect ( event )
 
         sineButt.alpha = 0
         sineBuy.alpha = 1
-        if not storeSettings.speedPaid then 
+        if not storeSettings.trigPaid then 
           speedButt.alpha = 1
         end
         if not storeSettings.boltPaid then
@@ -176,7 +176,7 @@ local function descSelect ( event )
         
         boltButt.alpha = 0
         boltBuy.alpha = 1
-        if not storeSettings.speedPaid then 
+        if not storeSettings.trigPaid then 
           speedButt.alpha = 1
         end
         if not storeSettings.sinePaid then
@@ -202,11 +202,11 @@ function scene:createScene( event )
   end
 
   whichOne = {}
-  whichOne[1] = "com.trigonometry.iap.sine"
+  whichOne[1] = "com.speedfeed.iap.sine"
   --whichOne[1] = "android.test.purchased"
-  whichOne[2] = "com.trigonometry.iap.speed"
+  whichOne[2] = "com.speedfeed.iap.trig"
   --whichOne[2] = "android.test.canceled"
-  whichOne[3] = "com.trigonometry.iap.bolt"
+  whichOne[3] = "com.speedfeed.iap.bolt"
   --whichOne[3] = "android.test.item_unavailable"
 
   sineGroup = display.newGroup ( )
@@ -266,12 +266,12 @@ function scene:createScene( event )
   sineBuy.x = display.actualContentHeight-85
   sineBuy.y = 110
   sineBuy.alpha = 0
-
+--Speed is Trig in this app
   speedButt = widget.newButton
   {
     id = "speedButt",
     width = 125,
-    label = "Speeds & Feeds",
+    label = "Trigonometry",
     labelColor = { default = {255, 255, 255}, over = {39, 102, 186, 200}},
     font = "BerlinSansFB-Reg",
     fontSize = 16,
@@ -374,13 +374,15 @@ function scene:createScene( event )
 
   sineGroup.alpha = 0
 
-  speedDesc = display.newImageRect( speedGroup, "backgrounds/speedDesc.png", 285, 180 )
+--speed is replaced by Trig in this app
+
+  speedDesc = display.newImageRect( speedGroup, "backgrounds/trig.png", 285, 180 )
   speedDesc.x = 200
-  speedDesc.y = 115
+  speedDesc.y = 110
 
   speedText = display.newText( options )
   speedGroup:insert(speedText)
-  speedText.text = "Calculate cutting speeds & feeds for drills, milling cutters, and lathe workpieces. Calculate between RPM and feet or meters per minute, and between feed per rev and feed per minute. $0.99 USD"
+  speedText.text = "Solve Right Angle and Oblique Triangle problems. Easily switch between inch and metric, and convert between degrees-decimal and degrees, minutes and seconds. $0.99 USD"
   speedText.x = 200
   speedText.y = 245
 
@@ -407,7 +409,7 @@ function scene:createScene( event )
     sineButt:setEnabled(false)
   end
 
-  if storeSettings.speedPaid then
+  if storeSettings.trigPaid then
     speedButt.alpha = 0.50
     speedButt:setEnabled(false)
   end
@@ -417,7 +419,7 @@ function scene:createScene( event )
     boltButt:setEnabled(false)
   end
 
-  if not storeSettings.sinePaid and not storeSettings.speedPaid and not storeSettings.boltPaid then
+  if not storeSettings.sinePaid and not storeSettings.trigPaid and not storeSettings.boltPaid then
     restoreButt.alpha = 1
   else
     restoreButt.alpha = 0
