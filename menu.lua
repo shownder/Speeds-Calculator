@@ -76,7 +76,7 @@ local function alertListener ( event )
     if i == 3 then
       local options =
       {
-        iOSAppId = "735542885",
+        iOSAppId = "737001001",
         nookAppEAN = "0987654321",
         supportedAndroidStores = { "google", "samsung", "amazon", "nook" },
       }
