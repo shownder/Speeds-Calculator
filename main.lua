@@ -12,10 +12,10 @@ local physicalW = math.round( (display.contentWidth  - display.screenOriginX*2) 
 local physicalH = math.round( (display.contentHeight - display.screenOriginY*2) / display.contentScaleY)
 
 --Require
-local storyboard = require( "storyboard" )
 local loadsave = require("loadsave")
 local device = require("device")
 local licensing = require( "licensing" )
+local composer = require( "composer" )
 
 if not device.isApple then
 
@@ -36,30 +36,30 @@ local function licensingListener( event )
    local verified = event.isVerified
    if not event.isVerified then
       --failed verify app from the play store, we print a message
-      native.showAlert ( "Not Authorized", "The app was not purchased from Google Play.", { "Close" }, alertListener)
+      native.showAlert ( "Could Not Authorize", "There was a problem contacting the Google licensing servers. Please check internet connection and try again.", { "Close" }, alertListener)
    end
 end
 
 licensing.verify( licensingListener )
 end
 
-local timesOpen = loadsave.loadTable("timesOpen.json")
---timesOpen.opened = 0
+local timesOpen2 = loadsave.loadTable("timesOpen2.json")
+--timesOpen2.opened = 4
   
-  if (loadsave.loadTable("timesOpen.json") == nil) then
-    timesOpen = {}
-    timesOpen.opened = 0
-    loadsave.saveTable(timesOpen, "timesOpen.json")
-  elseif timesOpen.opened ~= "never" then
-    --timesOpen.opened = 0
-    if timesOpen.opened < 7 then
-      timesOpen.opened = timesOpen.opened + 1
-      loadsave.saveTable(timesOpen, "timesOpen.json")
+  if (timesOpen2 == nil) then
+    timesOpen2 = {}
+    timesOpen2.opened = 0
+    loadsave.saveTable(timesOpen2, "timesOpen2.json")
+  elseif timesOpen2.opened ~= "never" then
+    --timesOpen2.opened = 0
+    if timesOpen2.opened < 7 then
+      timesOpen2.opened = timesOpen2.opened + 1
+      loadsave.saveTable(timesOpen2, "timesOpen2.json")
     end
   end
  
-
-storyboard.gotoScene( "menu", "fade", 800 )
+print(system.getInfo("model") .. " " .. system.getInfo("platformVersion"))
+composer.gotoScene( "menu")
 
 
 

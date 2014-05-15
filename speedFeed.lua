@@ -1,25 +1,17 @@
---
--- Project: Trades Math Calculator
--- Description: 
---
--- Version: 1.0
--- Managed with http://CoronaProjectManager.com
---
--- Copyright 2013 . All Rights Reserved.
--- 
-
---Require
+local composer = require( "composer" )
+local scene = composer.newScene()
 local widget = require ( "widget" )
-local storyboard = require( "storyboard" )
-local scene = storyboard.newScene()
-
 local stepperDataFile = require("Images.stepSheet_stepSheet")
---local tapAniDataFile = require("Images.tapSheetv2_tapSheetv2")
+display.setStatusBar(display.HiddenStatusBar)
+local myData = require("myData")
 
---Local forward references
+---------------------------------------------------------------------------------
+-- All code outside of the listener functions will only be executed ONCE
+-- unless "composer.removeScene()" is called.
+---------------------------------------------------------------------------------
 
 local optionsGroup, backGroup
-local back, menuBack, backEdgeX, backEdgeY
+local back, menuBack, backEdgeX, backEdgeY, rightDisplay
 
 local decStep, menu, reset, measure
 
@@ -31,12 +23,10 @@ local feedFlag, speedFlag
 
 local stepSheet, buttSheet, tapSheet
 local rpmTap, diamTap, revTap, surfaceSpeedTap, minuteTap
-local options
+local options, charts, mats
 
-local calc, clac2
-local addListeners, removeListeners, toMill, toInch, goBack2
+local calc, clac2, addListeners, removeListeners, toMill, toInch, goBack2, calculate, toFoot, toMeter
 
---Listeners
 local function onKeyEvent( event )
 
    local phase = event.phase
@@ -45,53 +35,10 @@ local function onKeyEvent( event )
    
    if ( "back" == keyName and phase == "up" ) then
        
-       timer.performWithDelay(100,goBack2,1)
+     timer.performWithDelay(100,goBack2,1)
+     
    end
    return true
-end
-
-local function helpScreen(event)
-	local phase = event.phase
-  
-  if "ended" == phase then	
-
-    if options then
-				transition.to ( optionsGroup, { time = 500, x=(backEdgeX - 125) } )
-				transition.to ( optionsGroup, { time = 500, alpha = 0, delay = 200} )
-				transition.to ( optionsButt, {time = 500, x=(backEdgeX + 115)} )
-				options = false
-    end
-    
-    Runtime:removeEventListener( "touch", onScreenTouch  )
-    
-    storyboard.showOverlay( "help", { effect="zoomInOut", time=200, params = { helpType = "speed" }, isModal = true}  )
-    
-  end
-      
-end
-
-local function optionsMove(event)
-	local phase = event.phase
-  if "ended" == phase then
-		
-    if not options then
-      options = true
-      transition.to ( optionsBack, { time = 200, x = -50 } )
-      transition.to ( optionsBack, { time = 200, y = 0 } )
-			transition.to ( optionsGroup, { time = 500, alpha = 1} )
-      transition.to ( backGroup, { time = 200, x=400 } )
-      transition.to (decLabel, { time = 200, x = backEdgeX - 43, y = backEdgeY + 110} )
-      decLabel:setTextColor(39, 102, 186)
-		elseif options then 
-			transition.to ( optionsGroup, { time = 100, alpha = 0} )
-      transition.to ( backGroup, { time = 200, x=display.contentCenterX } )
-      transition.to ( optionsBack, { time = 200, x = -170 } )
-      transition.to ( optionsBack, { time = 200, y = -335 } )
-      transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
-      decLabel:setTextColor(255)
-			options = false
-    end
-  end
 end
 
 local function resetCalc(event)
@@ -104,7 +51,7 @@ local function resetCalc(event)
 		transition.to(minute, {time = 300, alpha = 0})
     transition.to(rpmTap, {time = 300, alpha = 1})
 		transition.to(diamTap, {time = 300, alpha = 1})
-    transition.to(surfaceSpeedTap, {time = 300, alpha = 0})
+    transition.to(surfaceSpeedTap, {time = 300, alpha = 1})
 		transition.to(revTap, {time = 300, alpha = 0})
 		transition.to(minuteTap, {time = 300, alpha = 0})
     
@@ -121,13 +68,109 @@ local function resetCalc(event)
     
     if options then
 			transition.to ( optionsGroup, { time = 100, alpha = 0} )
-      transition.to ( backGroup, { time = 200, x=display.contentCenterX } )
+      transition.to ( backGroup, { time = 200, x=0 } )
       transition.to ( optionsBack, { time = 200, x = -170 } )
       transition.to ( optionsBack, { time = 200, y = -335 } )
       transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
-      decLabel:setTextColor(255)
+      decLabel:setFillColor(1)
 			options = false
-		end		
+		end
+    myData.inch = false
+		
+end
+
+local function alertListener2 ( event )
+	if "clicked" == event.action then
+    local i = event.index
+    if 1 == i then
+      timer.performWithDelay( 500, resetCalc("ended") )
+      whatTap = 2
+      myData.isOverlay = true
+      composer.showOverlay( "charts", { effect="fromTop", time=100, isModal = true }  )
+    end
+  end
+end
+
+local function alertListener3 ( event )
+	if "clicked" == event.action then
+    local i = event.index
+    if 1 == i then
+      timer.performWithDelay( 500, resetCalc("ended") )
+      whatTap = 2
+      myData.isOverlay = true
+      composer.showOverlay( "materials", { effect="fromTop", time=500, isModal = true }  )
+    end
+  end
+end
+
+local function optionsMove(event)
+	local phase = event.phase
+  if "ended" == phase then
+		
+    if not options then
+      options = true
+      transition.to ( optionsBack, { time = 200, x = -50 } )
+      transition.to ( optionsBack, { time = 200, y = 0 } )
+			transition.to ( optionsGroup, { time = 500, alpha = 1} )
+      transition.to ( backGroup, { time = 200, x=160 } )
+      transition.to (decLabel, { time = 200, x = 70, y = backEdgeY + 110} )
+      decLabel:setFillColor(0.15, 0.4, 0.729)
+		elseif options then 
+			transition.to ( optionsGroup, { time = 100, alpha = 0} )
+      transition.to ( backGroup, { time = 200, x=0 } )
+      transition.to ( optionsBack, { time = 200, x = -170 } )
+      transition.to ( optionsBack, { time = 200, y = -335 } )
+      transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
+      decLabel:setFillColor(1)
+			options = false
+    end
+  end
+end
+
+local function goToCharts(event)
+  local phase = event.phase  
+  
+  if "ended" == phase then
+    if options then
+      transition.to ( optionsGroup, { time = 100, alpha = 0} )
+      transition.to ( backGroup, { time = 200, x=0 } )
+      transition.to ( optionsBack, { time = 200, x = -170 } )
+      transition.to ( optionsBack, { time = 200, y = -335 } )
+      transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
+      decLabel:setFillColor(1)
+      options = false
+    end	
+    if tapTable[1].text ~= "Tap Me" and tapTable[2].text ~= "Tap Me" and tapTable[3].text ~= "Tap Me" then
+      native.showAlert ("Continue?", "Choosing new Diameter will reset all values!", { "OK", "Cancel" }, alertListener2 )
+    else
+      whatTap = 2
+      myData.isOverlay = true
+      composer.showOverlay( "charts", { effect="fromTop", time=100, isModal = true }  )
+    end
+  end  
+end
+
+local function goToMats(event)
+  local phase = event.phase  
+  
+  if "ended" == phase then
+    if options then
+      transition.to ( optionsGroup, { time = 100, alpha = 0} )
+      transition.to ( backGroup, { time = 200, x=0 } )
+      transition.to ( optionsBack, { time = 200, x = -170 } )
+      transition.to ( optionsBack, { time = 200, y = -335 } )
+      transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
+      decLabel:setFillColor(1)
+      options = false
+    end	
+    if tapTable[1].text ~= "Tap Me" and tapTable[2].text ~= "Tap Me" and tapTable[3].text ~= "Tap Me" then
+      native.showAlert ("Continue?", "Choosing new Surface Speed will reset all values!", { "OK", "Cancel" }, alertListener3 )
+    else
+      whatTap = 3
+      myData.isOverlay = true
+      composer.showOverlay( "materials", { effect="fromTop", time=500, isModal = true }  )
+    end
+  end  
 end
 
 local function alertListener ( event )
@@ -143,7 +186,7 @@ local function alertListener ( event )
 		end
 			--tapCount = tapCount + 1
       whatTap = whatTap + 10
-      storyboard.showOverlay( "calculator", { effect="fromTop", time=200, params = { negTrue = false, needDec = true }, isModal = true }  )
+      composer.showOverlay( "calculator", { effect="fromTop", time=200, params = { negTrue = false, needDec = true }, isModal = true }  )
     elseif 2 == i then
       print("Cancel was pressed")
     end
@@ -158,7 +201,7 @@ local function goBack (event)
     transition.to ( optionsBack, { time = 500, x = -170 } )
     transition.to ( optionsBack, { time = 500, y = -335 } )
 	options = false
-	storyboard.gotoScene( "menu", { effect="slideRight", time=800})
+	composer.gotoScene( "menu", { effect="fromBottom", time=800})
 	return true   
 	end
 end
@@ -188,11 +231,11 @@ local function calcTouch( event )
     
     if options then
 			transition.to ( optionsGroup, { time = 100, alpha = 0} )
-      transition.to ( backGroup, { time = 200, x=display.contentCenterX } )
+      transition.to ( backGroup, { time = 200, x=0 } )
       transition.to ( optionsBack, { time = 200, x = -170 } )
       transition.to ( optionsBack, { time = 200, y = -335 } )
       transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
-      decLabel:setTextColor(255)
+      decLabel:setFillColor(1)
 			options = false
 		end
 		
@@ -205,7 +248,7 @@ local function calcTouch( event )
     if not continue then
       native.showAlert ("Continue?", "Press OK to reset all values and continue.", { "OK", "Cancel" }, alertListener )
     else
-      storyboard.showOverlay( "calculator", { effect="fromRight", time=200, params = { negTrue = false, needDec = true }, isModal = true }  )
+      composer.showOverlay( "calculator", { effect="fromRight", time=200, params = { negTrue = false, needDec = true }, isModal = true }  )
     end
 		
 		return true
@@ -214,7 +257,6 @@ end
 
 local function measureChange( event )
 	local phase = event.phase
-	
 	if "ended" == phase then	
 		if measure:getLabel() == "TO METRIC" then
 			measure:setLabel("TO IMPERIAL")
@@ -224,11 +266,14 @@ local function measureChange( event )
       revText.text = "Mill"
 			for i = 2, 5, 1 do
 				if tapTable[i].text ~= "Tap Me" then
-					tapTable[i].text = math.round(toMill(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
-
-				end
-			end
-		else
+					if i == 3 then
+            tapTable[i].text = math.round(toMeter(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          else
+            tapTable[i].text = math.round(toMill(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          end
+        end
+      end
+    else
 			measure:setLabel("TO METRIC")
 			measureLabel:setText("Imperial")
       speedText.text = "feet/min"
@@ -236,17 +281,21 @@ local function measureChange( event )
       revText.text = "Inch"
 			for i = 2, 5, 1 do
 				if tapTable[i].text ~= "Tap Me" then
-					tapTable[i].text = math.round(toInch(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
-				end
+					if i == 3 then
+            tapTable[i].text = math.round(toFoot(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          else
+            tapTable[i].text = math.round(toInch(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          end
+        end          
 			end
 		end
     if options then
 			transition.to ( optionsGroup, { time = 100, alpha = 0} )
-      transition.to ( backGroup, { time = 200, x=display.contentCenterX } )
+      transition.to ( backGroup, { time = 200, x=0 } )
       transition.to ( optionsBack, { time = 200, x = -170 } )
       transition.to ( optionsBack, { time = 200, y = -335 } )
       transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
-      decLabel:setTextColor(255)
+      decLabel:setFillColor(1)
 			options = false
 		end
 	end	
@@ -255,10 +304,281 @@ local function measureChange( event )
 	
 end
 
---End Listeners
+local function measureChange2()
 
-function scene:createScene( event )
-	local screenGroup = self.view
+		if measure:getLabel() == "TO METRIC" then
+			measure:setLabel("TO IMPERIAL")
+			measureLabel:setText("Metric")
+      speedText.text = "meters/min"
+      minText.text = "Mill"
+      revText.text = "Mill"
+			for i = 2, 5, 1 do
+				if tapTable[i].text ~= "Tap Me" then
+					if i == 3 then
+            tapTable[i].text = math.round(toMeter(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          else
+            tapTable[i].text = math.round(toMill(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          end
+        end
+      end
+    else
+			measure:setLabel("TO METRIC")
+			measureLabel:setText("Imperial")
+      speedText.text = "feet/min"
+      minText.text = "Inch"
+      revText.text = "Inch"
+			for i = 2, 5, 1 do
+				if tapTable[i].text ~= "Tap Me" then
+					if i == 3 then
+            tapTable[i].text = math.round(toFoot(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          else
+            tapTable[i].text = math.round(toInch(tapTable[i].text) * math.pow(10, places)) / math.pow(10, places)
+          end
+        end          
+			end
+		end
+    if options then
+			transition.to ( optionsGroup, { time = 100, alpha = 0} )
+      transition.to ( backGroup, { time = 200, x=0 } )
+      transition.to ( optionsBack, { time = 200, x = -170 } )
+      transition.to ( optionsBack, { time = 200, y = -335 } )
+      transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
+      decLabel:setFillColor(1)
+			options = false
+		end
+	
+	calc()
+	
+end
+
+---------------------------------------------------
+--Functions used after overlay
+---------------------------------------------------
+
+function scene:calculate()
+  local screenGroup = self.view
+  
+  myData.isOverlay = false
+    
+  if myData.number ~= "Tap Me" then    
+          	
+    if whatTap > 5 then
+      tapTable[whatTap - 10].text = myData.number
+    else
+      tapTable[whatTap].text = myData.number
+    end
+    
+--    if diam.text ~= "Tap Me" and rpm.text == "Tap Me" then
+--      surfaceSpeedTap.alpha = 1
+--    end
+
+    if rpm.text ~= "Tap Me" and diam.text == "Tap Me" then
+      surfaceSpeedTap.alpha = 0
+      surfaceSpeed.alpha = 0
+    elseif surfaceSpeed.text ~= "Tap Me" and diam.text == "Tap Me" then
+      rpmTap.alpha = 0
+      rpm.alpha = 0
+    end
+                
+    if rpm.text ~= "Tap Me" and (rev.text ~= "Tap Me" or minute.text ~= "Tap Me") then
+    	feedFlag = true
+    else 
+    	feedFlag = false
+    end
+    
+    if diam.text ~= "Tap Me" and (rpm.text ~= "Tap Me" or surfaceSpeed.text ~= "Tap Me") then
+    	speedFlag = true
+    else
+    	speedFlag = false
+    end
+    
+    if rpm.text ~= "Tap Me" and diam.text ~= "Tap Me" and surfaceSpeed.text ~= "Tap Me" then
+      --do nothing
+    else
+      calc()
+    end
+    
+    if rev.text ~= "Tap Me" or minute.text ~= "Tap Me" then
+      calc2()
+    end
+    
+    if rpm.text ~= "Tap Me" then
+      revTap.alpha = 1
+      minuteTap.alpha = 1
+    end
+    
+    if rev.text ~= "Tap Me" or minute.text ~= "Tap Me" then
+      revTap.alpha = 0
+      rev.alpha = 1
+      minuteTap.alpha = 0
+      minute.alpha = 1
+    end
+    
+    for i = 1, 3, 1 do
+      if tapTable[i].text ~= "Tap Me"then
+        tapTable[i].alpha = 1
+        aniTable[i].alpha = 0
+      end
+    end
+  end
+end
+
+function scene:switch()
+  local screenGroup = self.view
+  
+  if measure:getLabel() == "TO IMPERIAL" and myData.number ~= "Tap Me" then
+    myData.number = myData.number / 3.2808
+    myData.number = math.round(myData.number * math.pow(10, places)) / math.pow(10, places)
+    scene:calculate()
+  else
+    scene:calculate()
+  end
+end
+
+local function alertListener4 ( event )
+	if "clicked" == event.action then
+    local i = event.index
+    if 1 == i then
+      measureChange2()
+      timer.performWithDelay(100, scene:calculate())
+    end
+  end
+end
+
+function scene:switch2()
+  local screenGroup = self.view
+  
+  if myData.inch == true then print("it's true") elseif myData.inch == false then print("it's false") else print("It's Nothing" .. " " .. myData.number) end
+  
+  if measure:getLabel() == "TO IMPERIAL" and myData.inch == true then
+    native.showAlert ("Caution", "You have chosen an INCH drill. Switch to IMPERIAL calculations?", { "OK", "Cancel" }, alertListener4 )
+  elseif measure:getLabel() == "TO METRIC" and myData.inch == false then
+    native.showAlert ("Caution", "You have chosen an MM drill. Switch to METRIC calculations?", { "OK", "Cancel" }, alertListener4 )
+  else
+    scene:calculate()
+  end
+  
+end
+
+calc = function()
+	
+	if speedFlag then
+    	if measure:getLabel() == "TO METRIC" then
+    		if rpm.text ~= "Tap Me" then
+          surfaceSpeed.text = rpm.text * diam.text / 3.8197
+          surfaceSpeed.alpha = 1
+          surfaceSpeedTap.alpha = 0
+          print("surface speed")
+    		elseif surfaceSpeed.text ~= "Tap Me" then
+          rpm.text = 3.8197 * surfaceSpeed.text / diam.text
+          rpmTap.alpha = 0
+          rpm.alpha = 1
+    		end
+    	elseif measure:getLabel() == "TO IMPERIAL" then
+    		if rpm.text ~= "Tap Me" then
+          surfaceSpeed.text = diam.text * rpm.text / 318.31
+          surfaceSpeed.alpha = 1
+          surfaceSpeedTap.alpha = 0
+    		elseif surfaceSpeed.text ~= "Tap Me" then
+          rpm.text = 318.31 * surfaceSpeed.text / diam.text
+          rpmTap.alpha = 0
+          rpm.alpha = 1
+    		end    			
+    	end
+      
+      for i = 1, 5, 1 do
+			if tapTable[i].text ~= "Tap Me" then
+				if i == 1 then
+					tapTable[1].text = math.round(tapTable[1].text * math.pow(10, 0)) / math.pow(10, 0)
+				else
+				tapTable[i].text = math.round(tapTable[i].text * math.pow(10, places)) / math.pow(10, places)
+				end
+			end
+      end
+    
+      timer.performWithDelay( 10, removeListeners, 2 )
+      for i = 1, 3, 1 do
+        tapTable[i]:setFillColor(1)
+      end
+    end	
+	
+end
+
+calc2 = function()
+  
+      if feedFlag then
+    	if (minute.text ~= "Tap Me") and (whatTap == 5 or whatTap == 15) then
+    		rev.text = minute.text / rpm.text
+        tapTable[4].text = math.round(tapTable[4].text * math.pow(10, places)) / math.pow(10, places)
+    	elseif (rev.text ~= "Tap Me") and (whatTap == 4 or whatTap == 14) then
+    		minute.text = rev.text * rpm.text
+        tapTable[5].text = math.round(tapTable[5].text * math.pow(10, places)) / math.pow(10, places)
+    	end
+    end
+end
+
+addListeners = function()
+  
+  surfaceSpeed:addEventListener ( "touch", calcTouch )
+  
+end
+
+removeListeners = function()
+  
+  surfaceSpeed:removeEventListener ( "touch", calcTouch )
+  
+end
+  
+
+toMill = function(num)
+
+	return num * 25.4	
+
+end
+
+toMeter = function(num)
+  
+  return num / 3.2808
+end
+
+toInch = function(num)
+	
+	return num / 25.4
+	
+end
+
+toFoot = function(num)
+  
+  return num * 3.2808
+  
+end
+
+goBack2 = function()
+	
+  if (myData.isOverlay) then
+    myData.number = "Tap Me"
+    composer.hideOverlay("slideUp", 500)
+  else
+		if options then
+			transition.to ( optionsGroup, { time = 100, alpha = 0} )
+      transition.to ( backGroup, { time = 200, x=0 } )
+      transition.to ( optionsBack, { time = 200, x = -170 } )
+      transition.to ( optionsBack, { time = 200, y = -335 } )
+      transition.to (decLabel, { time = 200, x = backEdgeX + 177, y = backEdgeY + 115} )
+      decLabel:setFillColor(1)
+			options = false
+		end
+		composer.gotoScene( "menu", { effect="fromBottom", time=800})
+  end
+		
+end
+
+---------------------------------------------------------------------------------
+
+-- "scene:create()"
+function scene:create( event )
+
+   local screenGroup = self.view
 	
 	tapTable = {}
   aniTable = {}
@@ -277,10 +597,6 @@ function scene:createScene( event )
   
 	stepSheet = graphics.newImageSheet("Images/stepSheet_stepSheet.png", stepperDataFile.getSpriteSheetData() )
 	
---	tapSheet = graphics.newImageSheet("Images/tapSheetv2_tapSheetv2.png", tapAniDataFile.getSpriteSheetData() )
---	local tapAniSequenceDataFile = require("Images.tapAniv2");
---	local tapAniSequenceData = tapAniSequenceDataFile:getAnimationSequences();
-	
 	back = display.newImageRect ( screenGroup, "backgrounds/background.png",  570, 360 )
 	back.x = display.contentCenterX
 	back.y = display.contentCenterY		
@@ -290,21 +606,6 @@ function scene:createScene( event )
   rightDisplay = display.newImageRect(backGroup, "backgrounds/speeds.png", 570, 360)
   rightDisplay.x = display.contentCenterX
   rightDisplay.y = display.contentCenterY  
-  
---    helpButt = widget.newButton
---	{
---		id = "helpButt",
---		--label = "HELP",
---		--labelColor = { default = {0, 0, 0, 150}, over = {192, 192, 192}},
---		--font = "Rock Salt",
---		fontSize = 16,
---		onEvent = helpScreen,
---		defaultFile = "Images/infoButt.png",
---		overFile = "Images/infoButtOver.png",
---		}
---	optionsGroup:insert(helpButt)
---	helpButt.x = backEdgeX + 105
---	helpButt.y = backEdgeY + 85
 	
 		decStep = widget.newStepper
 	{
@@ -330,8 +631,9 @@ function scene:createScene( event )
 	{
 		id = "measureButt",
     width = 125,
+    height = 52,
 		label = "TO METRIC",
-		labelColor = { default = {39, 102, 186, 200}, over = {255, 255, 255}},
+		labelColor = { default = {0.15, 0.4, 0.729}, over = {1}},
 		font = "BerlinSansFB-Reg",
 		fontSize = 20,
     defaultFile = "Images/button.png",
@@ -346,8 +648,9 @@ function scene:createScene( event )
 	{
 		id = "menuButt",
     width = 125,
+    height = 52,
 		label = "MENU",
-		labelColor = { default = {39, 102, 186, 200}, over = {255, 255, 255}},
+		labelColor = { default = {0.15, 0.4, 0.729}, over = {1}},
 		font = "BerlinSansFB-Reg",
 		fontSize = 20,
     defaultFile = "Images/button.png",
@@ -362,8 +665,9 @@ function scene:createScene( event )
 	{
 		id = "resetButt",
     width = 125,
+    height = 52,
 		label = "RESET",
-		labelColor = { default = {39, 102, 186, 200}, over = {255, 255, 255}},
+		labelColor = { default = {0.15, 0.4, 0.729}, over = {1}},
 		font = "BerlinSansFB-Reg",
 		fontSize = 20,
     defaultFile = "Images/button.png",
@@ -377,8 +681,8 @@ function scene:createScene( event )
 	optionsGroup.alpha = 0
   
   optionsBack = display.newRect(screenGroup, 0, 0, 200, 365)
-  optionsBack:setFillColor(255, 255, 255)
-  optionsBack:setReferencePoint(display.TopLeftReferencePoint)
+  optionsBack:setFillColor(1)
+  optionsBack.anchorX = 0; optionsBack.anchorY = 0; 
   optionsBack.x = -170
   optionsBack.y = -335  
   
@@ -389,21 +693,55 @@ function scene:createScene( event )
   optionsButt.isHitTestable = true
   
 	decPlaces = display.newEmbossedText( backGroup, "Decimal Places:", 0, 0, "BerlinSansFB-Reg", 16 )
-  decPlaces:setTextColor(255)
-  decPlaces:setEmbossColor({highlight = {r=0, g=0, b=0, a=200}, shadow = {r=0,g=0,b=0, a=0}})
+  decPlaces:setFillColor(1)
+  decPlaces:setEmbossColor({highlight = {r=0, g=0, b=0, a=1}, shadow = {r=1,g=1,b=1, a=0}})
 	decPlaces.x = backEdgeX + 115
 	decPlaces.y = backEdgeY + 117
 	
 	places = 4
-	decLabel = display.newText( backGroup, places, 0, 0, "BerlinSansFB-Reg", 22 )
+	decLabel = display.newText( screenGroup, places, 0, 0, "BerlinSansFB-Reg", 22 )
 	decLabel.x = backEdgeX + 178
 	decLabel.y = backEdgeY + 115
   
   measureLabel = display.newEmbossedText(backGroup, "Imperial", 0, 0, "BerlinSansFB-Reg", 20)
-  measureLabel:setTextColor(255)
-  measureLabel:setEmbossColor({highlight = {r=0, g=0, b=0, a=200}, shadow = {r=0,g=0,b=0, a=0}})
+  measureLabel:setFillColor(1)
+  measureLabel:setEmbossColor({highlight = {r=0, g=0, b=0, a=1}, shadow = {r=1,g=1,b=1, a=0}})
 	measureLabel.x = backEdgeX + 115
 	measureLabel.y = backEdgeY + 95
+  
+  charts = widget.newButton
+	{
+		id = "chartsButt",
+    width = 90,
+    height = 37,
+		label = "Drill Charts",
+		labelColor = { default = {1}, over = {0.15, 0.4, 0.729}},
+		font = "BerlinSansFB-Reg",
+		fontSize = 16,
+    defaultFile = "Images/chartButtD.png",
+    overFile = "Images/chartButtO.png",
+		onEvent = goToCharts,
+		}
+	backGroup:insert(charts)
+	charts.x = backEdgeX + 255
+	charts.y = backEdgeY + 90
+  
+  mats = widget.newButton
+	{
+		id = "chartsButt",
+    width = 90,
+    height = 37,
+		label = "Materials",
+		labelColor = { default = {1}, over = {0.15, 0.4, 0.729}},
+		font = "BerlinSansFB-Reg",
+		fontSize = 16,
+    defaultFile = "Images/chartButtD.png",
+    overFile = "Images/chartButtO.png",
+		onEvent = goToMats,
+		}
+	backGroup:insert(mats)
+	mats.x = backEdgeX + 255
+	mats.y = backEdgeY + 132
 		
 	rpm = display.newText( textOptionsR )
   backGroup:insert(rpm)
@@ -460,7 +798,7 @@ function scene:createScene( event )
 	surfaceSpeedTap:addEventListener ( "touch", calcTouch )
 	surfaceSpeedTap.tap = 13
 	--surfaceSpeedTap:play()
-  surfaceSpeedTap.alpha = 0
+  --surfaceSpeedTap.alpha = 0
   aniTable[3] = surfaceSpeedTap
 
 	rev = display.newText( textOptionsL )
@@ -521,8 +859,8 @@ function scene:createScene( event )
 	minText.x = backEdgeX + 42
 	minText.y = backEdgeY + 198
   
-	optionsGroup:setReferencePoint(display.CenterReferencePoint)
-  backGroup:setReferencePoint(display.CenterReferencePoint)
+	optionsGroup.anchorX = 0.5; optionsGroup.anchorY = 0.5; 
+  backGroup.anchorX = 0.5; backGroup.anchorY = 0.5; 
   backGroup.alpha = 0
   transition.to ( backGroup, { time = 500, alpha = 1, delay = 200} )
   optionsBack.alpha = 0
@@ -531,203 +869,59 @@ function scene:createScene( event )
   transition.to ( optionsButt, { time = 500, alpha = 1, delay = 600} )
   
   screenGroup:insert(backGroup)
-	
+  
 end
 
--- Called immediately after scene has moved onscreen:
-function scene:enterScene( event )
-  local group = self.view
-        
-		storyboard.purgeScene( "menu" )
+-- "scene:show()"
+function scene:show( event )
 
+   local sceneGroup = self.view
+   local phase = event.phase
+
+   if ( phase == "will" ) then
+      -- Called when the scene is still off screen (but is about to come on screen).
+   elseif ( phase == "did" ) then
+      composer.removeScene( "menu", true)
+   end
 end
 
-function scene:exitScene( event )
-  local group = self.view
+-- "scene:hide()"
+function scene:hide( event )
 
-  Runtime:removeEventListener( "key", onKeyEvent )
+   local sceneGroup = self.view
+   local phase = event.phase
+
+   if ( phase == "will" ) then
+      -- Called when the scene is on screen (but is about to go off screen).
+      -- Insert code here to "pause" the scene.
+      -- Example: stop timers, stop animation, stop audio, etc.
+      Runtime:removeEventListener( "key", onKeyEvent )
+   elseif ( phase == "did" ) then
+      -- Called immediately after scene goes off screen.
+   end
+end
+
+-- "scene:destroy()"
+function scene:destroy( event )
+
+   local sceneGroup = self.view
    
-end
-
-function scene:destroyScene( event )
-  local group = self.view
-
-		optionsGroup:removeSelf()
+   	optionsGroup:removeSelf()
     backGroup:removeSelf()
-   
+
+   -- Called prior to the removal of scene's view ("sceneGroup").
+   -- Insert code here to clean up the scene.
+   -- Example: remove display objects, save state, etc.
 end
 
-scene:addEventListener( "createScene", scene )
+---------------------------------------------------------------------------------
 
-scene:addEventListener( "enterScene", scene )
+-- Listener setup
+scene:addEventListener( "create", scene )
+scene:addEventListener( "show", scene )
+scene:addEventListener( "hide", scene )
+scene:addEventListener( "destroy", scene )
 
-scene:addEventListener( "exitScene", scene )
-
-scene:addEventListener( "destroyScene", scene )
-
---Overlay
--- the following event is dispatched once overlay is enabled
-function scene:overlayBegan( event )
-    print( "Showing overlay: " .. event.sceneName )
-end
-
--- the following event is dispatched once overlay is removed
-function scene:overlayEnded( event )
-    local group = self.view
-    
-    storyboard.isOverlay = false
-    
-  if storyboard.number ~= "Tap Me" then    
-          	
-    if whatTap > 5 then
-      tapTable[whatTap - 10].text = storyboard.number
-    else
-      tapTable[whatTap].text = storyboard.number
-    end
-    
-    if diam.text ~= "Tap Me" and rpm.text == "Tap Me" then
-      surfaceSpeedTap.alpha = 1
-    end
-            
-    if rpm.text ~= "Tap Me" and (rev.text ~= "Tap Me" or minute.text ~= "Tap Me") then
-    	feedFlag = true
-    else 
-    	feedFlag = false
-    end
-    
-    if diam.text ~= "Tap Me" and (rpm.text ~= "Tap Me" or surfaceSpeed.text ~= "Tap Me") then
-    	speedFlag = true
-    else
-    	speedFlag = false
-    end
-    
-    if rpm.text ~= "Tap Me" and diam.text ~= "Tap Me" and surfaceSpeed.text ~= "Tap Me" then
-      --do nothing
-    else
-      calc()
-    end
-    
-    if rev.text ~= "Tap Me" or minute.text ~= "Tap Me" then
-      calc2()
-    end
-    
-    if rpm.text ~= "Tap Me" then
-      revTap.alpha = 1
-      minuteTap.alpha = 1
-    end
-    
-    if rev.text ~= "Tap Me" or minute.text ~= "Tap Me" then
-      revTap.alpha = 0
-      rev.alpha = 1
-      minuteTap.alpha = 0
-      minute.alpha = 1
-    end
-    
-    for i = 1, 3, 1 do
-      if tapTable[i].text ~= "Tap Me"then
-        tapTable[i].alpha = 1
-        aniTable[i].alpha = 0
-      end
-    end
-    
-  end
-end
-
-function calc ()
-	
-	if speedFlag then
-    	if measure:getLabel() == "TO METRIC" then
-    		if rpm.text ~= "Tap Me" then
-          surfaceSpeed.text = rpm.text * diam.text / 3.8197
-          surfaceSpeed.alpha = 1
-          surfaceSpeedTap.alpha = 0
-          print("surface speed")
-    		elseif surfaceSpeed.text ~= "Tap Me" then
-          rpm.text = 3.8197 * surfaceSpeed.text / diam.text
-          rpmTap.alpha = 0
-          rpm.alpha = 1
-    		end
-    	elseif measure:getLabel() == "TO IMPERIAL" then
-    		if rpm.text ~= "Tap Me" then
-          surfaceSpeed.text = diam.text * rpm.text / 318.31
-          surfaceSpeed.alpha = 1
-          surfaceSpeedTap.alpha = 0
-    		elseif surfaceSpeed.text ~= "Tap Me" then
-          rpm.text = 318.31 * surfaceSpeed.text / diam.text
-          rpmTap.alpha = 0
-          rpm.alpha = 1
-    		end    			
-    	end
-      
-      for i = 1, 5, 1 do
-			if tapTable[i].text ~= "Tap Me" then
-				if i == 1 then
-					tapTable[1].text = math.round(tapTable[1].text * math.pow(10, 0)) / math.pow(10, 0)
-				else
-				tapTable[i].text = math.round(tapTable[i].text * math.pow(10, places)) / math.pow(10, places)
-				end
-			end
-      end
-    
-      timer.performWithDelay( 10, removeListeners, 2 )
-      for i = 1, 3, 1 do
-        tapTable[i]:setTextColor(255, 255, 255)
-      end
-    end	
-	
-end
-
-function calc2()
-  
-      if feedFlag then
-    	if (minute.text ~= "Tap Me") and (whatTap == 5 or whatTap == 15) then
-    		rev.text = minute.text / rpm.text
-        tapTable[4].text = math.round(tapTable[4].text * math.pow(10, places)) / math.pow(10, places)
-    	elseif (rev.text ~= "Tap Me") and (whatTap == 4 or whatTap == 14) then
-    		minute.text = rev.text * rpm.text
-        tapTable[5].text = math.round(tapTable[5].text * math.pow(10, places)) / math.pow(10, places)
-    	end
-    end
-end
-
-function addListeners()
-  
-  surfaceSpeed:addEventListener ( "touch", calcTouch )
-  
-end
-
-function removeListeners()
-  
-  surfaceSpeed:removeEventListener ( "touch", calcTouch )
-  
-end
-  
-
-function toMill(num)
-
-	return num * 25.4	
-
-end
-
-function toInch(num)
-	
-	return num / 25.4
-	
-end
-
-function goBack2()
-	
-  if (storyboard.isOverlay) then
-    storyboard.number = "Tap Me"
-    storyboard.hideOverlay()
-  else
-		storyboard.gotoScene( "menu", { effect="slideRight", time=800})
-  end
-		
-end
-
-scene:addEventListener( "overlayEnded" )
-
-scene:addEventListener( "overlayBegan" )
+---------------------------------------------------------------------------------
 
 return scene

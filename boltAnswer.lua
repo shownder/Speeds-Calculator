@@ -1,33 +1,30 @@
---
--- Project: main.lua
--- Description: 
---
--- Version: 1.0
--- Managed with http://CoronaProjectManager.com
---
--- Copyright 2013 . All Rights Reserved.
--- 
-local storyboard = require( "storyboard" )
-local scene = storyboard.newScene()
-local widget = require( "widget" )
+local composer = require( "composer" )
+local scene = composer.newScene()
+local widget = require ( "widget" )
+local stepperDataFile = require("Images.stepSheet_stepSheet")
+display.setStatusBar(display.HiddenStatusBar)
+local myData = require("myData")
+
+---------------------------------------------------------------------------------
+-- All code outside of the listener functions will only be executed ONCE
+-- unless "composer.removeScene()" is called.
+---------------------------------------------------------------------------------
 
 local answer, backButt, scrollView, answerX, answerY, diam, emailButt, maskBack
 local back, numY
 local bolt, boltCenterX, boltCenterY, line1, line2, goBack2
 
---Listeners
+--local function onKeyEvent( event )
 
-local function onKeyEvent( event )
+--   local phase = event.phase
+--   local keyName = event.keyName
+--   print( event.phase, event.keyName )
 
-   local phase = event.phase
-   local keyName = event.keyName
-   print( event.phase, event.keyName )
-
-  if ( "back" == keyName and phase == "down" ) then
-    timer.performWithDelay(100,goBack2,1)
-  end
-  return true
-end
+--  if ( "back" == keyName and phase == "down" ) then
+--    timer.performWithDelay(100,goBack2,1)
+--  end
+--  return true
+--end
 
 local function catchStrays(event)
    return true
@@ -59,7 +56,7 @@ end
 local function goBack( event )
 	if event.phase == "ended" then
 		
-		storyboard.hideOverlay(true, "slideRight", 300 )
+		composer.hideOverlay(true, "slideRight", 500 )
 		
 	end
 end
@@ -91,16 +88,20 @@ end
 				
 		return true
 	end
+  
+  
 
---End Listeners
+---------------------------------------------------------------------------------
 
-function scene:createScene( event )
-	local screenGroup = self.view
+-- "scene:create()"
+function scene:create( event )
+
+   	local screenGroup = self.view
 	
-	answer = storyboard.answer
-  answerX = storyboard.answerX
-  answerY = storyboard.answerY
-  diam = storyboard.diam
+	answer = myData.answer
+  answerX = myData.answerX
+  answerY = myData.answerY
+  diam = myData.diam
   local textOptionsL = {parent = screenGroup, text="", x=0, y=0, width=250, height=0, fontSize=15, align="left"}
   
   maskBack = display.newImageRect( screenGroup, "backgrounds/maskBack.png", 570, 360 )
@@ -113,8 +114,9 @@ function scene:createScene( event )
 	backEdgeX = maskBack.contentBounds.xMin
 	backEdgeY = maskBack.contentBounds.yMin
 	
-	back = display.newRect(screenGroup, 0, 0, display.pixelHeight, display.pixelWidth )	
-  back:setFillColor(255, 255, 255)
+	back = display.newRect(screenGroup, 0, 0, display.pixelHeight, display.pixelWidth )
+	back.anchorX = 0; back.anchorY = 0; 
+  back:setFillColor(1)
 	backEdgeX = back.contentBounds.xMin
 	backEdgeY = back.contentBounds.yMin
   
@@ -125,9 +127,9 @@ function scene:createScene( event )
   boltCenterX = backEdgeX + 360
   boltCenterY = backEdgeY + 180
   bolt = display.newCircle(screenGroup, boltCenterX, boltCenterY, 98)
-  bolt:setFillColor(0, 0, 0, 0)
+  bolt:setFillColor(0, 0)
   bolt.strokeWidth = 2
-  bolt:setStrokeColor(0, 0, 0)
+  bolt:setStrokeColor(0)
 	
 scrollView = widget.newScrollView
 	{
@@ -136,19 +138,18 @@ scrollView = widget.newScrollView
 		width = 240,
 		height = 265,
 		scrollWidth = 0,
-		--scrollHeight = display.pixelHeight-50,
 		id = "answerScroll",
 		hideBackground = false,
 		horizontalScrollDisabled = true,
 		verticalScrollDisabled = false,
-    	isBounceEnabled = false,
+    isBounceEnabled = false,
 		listener = scrollListener,		
 	}
 	screenGroup:insert(scrollView)
 	
 	for i = 0, #answer, 1 do	
 		local temp = display.newText( textOptionsL )
-    	temp:setTextColor(0,0,0)
+    	temp:setFillColor(0)
     	temp.text = answer[i]
 		temp.y = numY
 		temp.x = backEdgeX + 140
@@ -171,22 +172,23 @@ scrollView = widget.newScrollView
     temp:setFillColor(0, 0, 0, 0)
     temp.strokeWidth = 2
     if i == 0 then
-      temp:setStrokeColor(198, 68, 68)
+      temp:setStrokeColor(0.777, 0.267, 0.267)
     else
-      temp:setStrokeColor(0, 0, 0)
+      temp:setStrokeColor(0)
     end
   end
   
   line1 = display.newLine(screenGroup, boltCenterX - 110, boltCenterY, boltCenterX + 110, boltCenterY)
   line2 = display.newLine(screenGroup, boltCenterX, boltCenterY - 110, boltCenterX, boltCenterY + 110)
-  line1:setColor(0, 0, 0)
-  line2:setColor(0, 0, 0)
+  line1:setStrokeColor(0)
+  line2:setStrokeColor(0)
   
-  topBar = display.newRect( screenGroup, 0, 0, display.pixelHeight, 50 )	
-  topBar:setFillColor(39, 102, 186)
+  topBar = display.newRect( screenGroup, 0, 0, display.pixelHeight, 50 )
+	topBar.anchorX = 0; topBar.anchorY = 0; 
+  topBar:setFillColor(0.153, 0.4, 0.729)
 
   backButt = display.newImageRect(screenGroup, "Images/backButt.png", 54, 22)
-  backButt:setReferencePoint(display.TopLeftReferencePoint)
+  backButt.anchorX = 0; backButt.anchorY = 0; 
   backButt:addEventListener("touch", goBack)
   backButt.isHitTestable = true
   backButt.x = 10
@@ -203,28 +205,57 @@ scrollView = widget.newScrollView
 	
 end
 
-function scene:enterScene( event )
-  local group = self.view
+-- "scene:show()"
+function scene:show( event )
 
-    storyboard.isOverlay = true
-   
+   local sceneGroup = self.view
+   local phase = event.phase
+
+   if ( phase == "will" ) then
+      -- Called when the scene is still off screen (but is about to come on screen).
+   elseif ( phase == "did" ) then
+     myData.isOverlay = true
+   end
 end
 
-function scene:destroyScene( event )
-   local group = self.view
+-- "scene:hide()"
+function scene:hide( event )
 
-	storyboard.answer = nil
-  storyboard.answerX = nil
-  storyboard.answerY = nil
-  storyboard.diam = nil
-	
+   local sceneGroup = self.view
+   local phase = event.phase
+   local parent = event.parent
    
+   if ( phase == "will" ) then
+      -- Called when the scene is on screen (but is about to go off screen).
+      -- Insert code here to "pause" the scene.
+      -- Example: stop timers, stop animation, stop audio, etc.
+      parent:calculate()
+   elseif ( phase == "did" ) then
+    myData.answer = nil
+    myData.answerX = nil
+    myData.answerY = nil
+    myData.diam = nil
+   end
 end
 
-scene:addEventListener( "createScene", scene )
+-- "scene:destroy()"
+function scene:destroy( event )
 
-scene:addEventListener( "enterScene", scene )
+   local sceneGroup = self.view
 
-scene:addEventListener( "destroyScene", scene )
+   -- Called prior to the removal of scene's view ("sceneGroup").
+   -- Insert code here to clean up the scene.
+   -- Example: remove display objects, save state, etc.
+end
+
+---------------------------------------------------------------------------------
+
+-- Listener setup
+scene:addEventListener( "create", scene )
+scene:addEventListener( "show", scene )
+scene:addEventListener( "hide", scene )
+scene:addEventListener( "destroy", scene )
+
+---------------------------------------------------------------------------------
 
 return scene
