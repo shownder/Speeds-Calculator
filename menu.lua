@@ -24,31 +24,31 @@ local timesOpen2
 local back
 local logo, facebookButt
 local topBar
-local scrollComplete, going
+local scrollComplete, going, goingTo
 local bought, storeSettings
 
 local butTable, labelTable, menuList
 
 local function sceneSelect()
 
-   	if going.num == 1 then
+   	if going.num == 5 then
 		composer.gotoScene( "rightAngle", { effect="fromTop", time=800} )
-		elseif going.num == 2 then
+		elseif going.num == 6 then
 		composer.gotoScene( "oblique", { effect="fromTop", time=800} )
-		elseif going.num == 3 then
+		elseif going.num == 7 then
 		composer.gotoScene( "sineBar", { effect="fromTop", time=800} )
-		elseif going.num == 4 then
+		elseif going.num == 8 then
 		composer.gotoScene( "bolt", { effect="fromTop", time=800} )
-		elseif going.num == 5 then
+		elseif going.num == 1 then
 		composer.gotoScene( "speedFeed", { effect="fromTop", time=800} )
-    elseif going.num == 6 then
+    elseif going.num == 2 then
 		composer.gotoScene( "counter", { effect="fromTop", time=800} )
-    elseif going.num == 7 then
+    elseif going.num == 3 then
 		composer.gotoScene( "charts", { effect="fromTop", time=800, params = {isOverlay = false}} )
-    elseif going.num == 8 then
+    elseif going.num == 4 then
 		composer.gotoScene( "materials", { effect="fromTop", time=800, params = {isOverlay = false}} )
     elseif going.num == "store" then
-		composer.gotoScene( "rightAngle", { effect="fromTop", time=800, params = {isOverlay = false}} )
+		composer.gotoScene( "storePage", { effect="fromTop", time=800} )
    	end
 end
 
@@ -123,22 +123,6 @@ scrollComplete = function()
 
 end
 
-local function onRowTouch( event )
-  local phase = event.phase
-  local row = event.target.index
-  
-  if "press" == phase then
-
-  elseif "release" == phase then
-    going.num = row
-    if going.num > bought then
-      going.num = "store"
-    end
-    print(going.num)
-    sceneSelect()
-  end
-end
-
 local function onRowRender( event )
 
     -- Get reference to the row group
@@ -155,13 +139,6 @@ local function onRowRender( event )
     local butImage = buttons[row.index]
     local labelImage = labels[row.index]
     
---    if row.index > bought then
---      butImage = buttons2[row.index - bought]
---    end
---    if row.index > bought then
---      labelImage = labels2[row.index - bought]
---    end
-    
     icon = display.newImageRect(row, buttons[row.index], 56, 56)
     icon.anchorX = 0
     icon.x = 0
@@ -171,8 +148,7 @@ local function onRowRender( event )
       transition.to(icon, {alpha = 0.25, time = 500})
     else
       transition.to(icon, {alpha = 0.75, time = 500})
-    end
-    
+    end    
     
     label = display.newText( { parent = row, text = labels[row.index], 0, 0, font = "BerlinSansFB-Reg", fontSize = 20, width = 100})
     label.anchorX = 0
@@ -185,8 +161,53 @@ local function onRowRender( event )
     else
       transition.to(label, {alpha = 1, time = 500})
     end
+    
+    if labels[row.index] == "Right Angle" then
+      goingTo[row.index] = 5
+    elseif labels[row.index] == "Oblique Triangle" then
+      goingTo[row.index] = 6
+      myData[row.index] = "Oblique Triangle"
+    elseif labels[row.index] == "Sine Bar" then
+      goingTo[row.index] = 7
+      myData[row.index] = "Sine Bar"
+    elseif labels[row.index] == "Bolt Circle" then
+      goingTo[row.index] = 8
+      myData[row.index] = "Bolt Circle"
+    end
 
   return true
+end
+
+local function onRowTouch( event )
+  local phase = event.phase
+  local row = event.target.index
+  
+  if "press" == phase then
+   
+  elseif "release" == phase then
+    if row > bought then
+      going.num = "store"
+      if goingTo[row] == 5 then
+        myData.showing = "right"
+      elseif goingTo[row] == 6 then
+        myData.showing = "oblique"
+      elseif goingTo[row] == 7 then
+        myData.showing = "sine"
+      elseif goingTo[row] == 8 then
+        myData.showing = "bolt"
+      end
+    elseif (row > 4) then
+      going.num = goingTo[row]
+    else
+      going.num = row
+    end
+    
+    
+        
+    print(row)
+    print(going.num)
+    sceneSelect()
+  end
 end
 
 ---------------------------------------------------------------------------------
@@ -206,10 +227,11 @@ function scene:create( event )
   
   storeSettings = loadsave.loadTable("store.json")
   storeSettings.sinePaid = true
-  --storeSettings.trigPaid = true
+--  storeSettings.trigPaid = true
   storeSettings.boltPaid = true
   
   going = {}
+  goingTo = {}
   going.num = 1
   bought = 4
   
