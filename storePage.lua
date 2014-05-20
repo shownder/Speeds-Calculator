@@ -12,8 +12,8 @@ local myData = require("myData")
 
 -- local forward references should go here
 
-local back, example, descBack, desc, descTitle, descScroll, buttBack, buyBut, backBut
-local goBack2
+local back, example, descBack, desc, descTitle, descScroll, buttBack, buyBut, backBut, butGroup, descGroup, price
+local goBack2, butMove, goBack
 local backEdgeX, backEdgeY
 local showing
 
@@ -30,11 +30,126 @@ local function onKeyEvent( event )
   return true
 end
 
-goBack2 = function()
-	
-	omposer.gotoScene( "menu", { effect="fromBottom", time=800})
+local function onComplete( event )
+    if "clicked" == event.action then
+        local i = event.index
+        if 1 == i then
+          transition.to( butGroup, {time = 500, y = display.contentHeight + 5})
+          transition.to( descGroup, {time = 500, x = display.contentWidth + 5})
+          timer.performWithDelay(400, goBack)
+        end
+    end
+end
+
+local function transactionCallback( event )
+
+   print("In transactionCallback", event.transaction.state)
+   local transaction = event.transaction
+   local tstate = event.transaction.state
+   local product = event.transaction.productIdentifier
+   local showing = myData.showing
+
+   if tstate == "purchased" then
+      print("Transaction succuessful!")
+      if "com.speedfeed.iap.sine" == product then
+        storeSettings.sinePaid = true
+      elseif "com.speedfeed.iap.trig" == product then
+        storeSettings.trigPaid = true
+      elseif "com.speedfeed.iap.bolt" == product then
+        storeSettings.boltPaid = true
+--      elseif "com.speedfeed.iap.speed" == product then
+--        storeSettings.speedPaid = true
+      end
+      loadsave.saveTable(storeSettings, "store.json")
+      native.showAlert("Success", "Function is now unlocked!", {"Okay"}, onComplete)
+      store.finishTransaction( transaction )
+   elseif  tstate == "restored" then
+      print("Transaction restored (from previous session)")
+      if "com.speedfeed.iap.sine" == product then
+        storeSettings.sinePaid = true
+      elseif "com.speedfeed.iap.trig" == product then
+        storeSettings.trigPaid = true
+      elseif "com.speedfeed.iap.bolt" == product then
+        storeSettings.boltPaid = true
+--    elseif "com.speedfeed.iap.speed" == product then
+--      storeSettings.speedPaid = true
+      end
+      loadsave.saveTable(storeSettings, "store.json")
+      store.finishTransaction( transaction )
+   elseif tstate == "refunded" then
+      print("User requested a refund -- locking app back")
+      if "com.speedfeed.iap.sine" == product then
+        storeSettings.sinePaid = false
+      elseif "com.speedfeed.iap.trig" == product then
+        storeSettings.trigPaid = false
+      elseif "com.speedfeed.iap.bolt" == product then
+        storeSettings.boltPaid = false
+--    elseif "com.speedfeed.iap.speed" == product then
+--      storeSettings.speedPaid = false
+      end
+      loadsave.saveTable(storeSettings, "store.json")
+      native.showAlert("Refund", "Purchase was refunded.", {"Okay"})
+      store.finishTransaction( transaction )
+   elseif tstate == "cancelled" then
+      print("User cancelled transaction")
+      store.finishTransaction( transaction )
+   elseif tstate == "failed" then
+      print("Transaction failed, type:", transaction.errorType, transaction.errorString)
+      native.showAlert("Failed", transaction.errorType.." - "..transaction.errorString, {"Okay"})
+      store.finishTransaction( transaction )
+   else
+      print("unknown event")
+      store.finishTransaction( transaction )
+   end
+
+   print("done with store business for now")
+end
+
+local function purchase( event )
+  if event.phase == "ended" then
+    local showing = myData.showing
+    
+    if showing == "sine" then
+      print("Purchase Sine")
+      store.purchase({"com.speedfeed.iap.sine"})
+      --store.purchase({"android.test.purchased"})
+    elseif showing == "trig" then
+      print("Purchase Speed")
+      store.purchase({"com.speedfeed.iap.trig"})
+      --store.purchase({"android.test.canceled"})
+    elseif showing == "bolt" then
+      print("Purchase Bolt")
+      store.purchase({"com.speedfeed.iap.bolt"})
+      --store.purchase({"android.test.item_unavailable"})
+    elseif showing == "speed" then
+      --purchasing speed
+    end 
+  end
+end
+
+goBack = function()
+  
+  composer.gotoScene( "menu", { effect="fromBottom", time=800})
   
 end
+
+goBack2 = function(event)
+  local phase = event.phase
+  
+  if "ended" == phase then
+    transition.to( butGroup, {time = 500, y = display.contentHeight + 5})
+    transition.to( descGroup, {time = 500, x = display.contentWidth + 5})
+    timer.performWithDelay(400, goBack)
+  end
+  
+end
+
+butMove = function()
+
+  transition.to( butGroup, {time = 500, y = 0})
+  transition.to( descGroup, {time = 500, x = 0})
+end
+
 
 -- "scene:create()"
 function scene:create( event )
@@ -42,6 +157,17 @@ function scene:create( event )
   local sceneGroup = self.view
    
   Runtime:addEventListener( "key", onKeyEvent )
+  
+  storeSettings = loadsave.loadTable("store.json")
+  if store.availableStores.apple then
+      timer.performWithDelay(1000, function() store.init( "apple", transactionCallback); end)
+  end
+  if store.availableStores.google then
+      timer.performWithDelay( 1000, function() store.init( "google", transactionCallback ); end)
+  end
+  
+  descGroup = display.newGroup()
+  butGroup = display.newGroup()
    
   back = display.newImageRect( sceneGroup, "backgrounds/background.png", 570, 360 )
   back.x = display.contentCenterX
@@ -65,7 +191,7 @@ function scene:create( event )
   example.anchorY = 0
   example.x, example.y = 0, 0
   
-  descBack = display.newRect(sceneGroup, 0, 0, display.contentWidth / 2 - 50, display.contentHeight)
+  descBack = display.newRect(descGroup, 0, 0, display.contentWidth / 2 - 50, display.contentHeight)
   descBack.anchorX, descBack.anchorY = 1, 0
   descBack.x, descBack.y = display.contentWidth, 0
   descBack:setFillColor(1)
@@ -84,14 +210,15 @@ function scene:create( event )
       verticalScrollDisabled = false,
     }
     )
-  sceneGroup:insert(descScroll)
+  descGroup:insert(descScroll)
   descScroll.anchorX, descScroll.anchorY = 1, 0
   descScroll.x = descBack.x
   descScroll.y = descBack.y + 50
   --descScroll.alpha = 0
   
-  local options = {parent = sceneGroup, text="This is a test of the thing that I made ", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=18}
-  local options2 = {parent = sceneGroup, text="This is a Title", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=20}
+  local options = {parent = descGroup, text="This is a test of the thing that I made ", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=18}
+  local options2 = {parent = descGroup, text="This is a Title", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=20}
+  local options3 = {parent = descGroup, text="$0.99 USD", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=20}
   
   display.setDefault( "anchorX", 0 )
   display.setDefault( "anchorY", 0 )
@@ -122,6 +249,71 @@ function scene:create( event )
     desc.text = "Quickly calculate X and Y coordinates for points equally spaced around a circle.\n* Make center of circle any coordinate you require\n* Place first hole at any angle\n* Automatically add list of coordinates into email\n* Quickly switch between inch and metric, and convert between degrees-decimal and degrees, minutes and seconds."
     descTitle.text = "Bolt Circle Calculator"
   end
+  
+  buttBack = display.newRect(butGroup, 0, 0, 75, 65)
+  buttBack:setFillColor(1)
+  buttBack.anchorX = 0
+  buttBack.anchorY = 1
+  buttBack.y = display.contentHeight
+  
+  backBut = widget.newButton(
+    {
+      id = "backBut",
+      width = 63,
+      height = 25,
+      label = "BACK",
+      labelColor = { default = {0.15, 0.4, 0.729}, over = {1}},
+      font = "BerlinSansFB-Reg",
+      fontSize = 18,
+      defaultFile = "Images/backBut.png",
+      overFile = "Images/backButOver.png",
+      onEvent = goBack2,
+		}
+    )
+	butGroup:insert(backBut)
+  backBut.anchorX = 0
+  backBut.anchorY = 1
+  backBut.y = buttBack.y - 5
+  backBut.x = 5
+  
+  buyBut = widget.newButton(
+    {
+      id = "backBut",
+      width = 63,
+      height = 25,
+      label = "BUY",
+      labelColor = { default = {0.076, 0.463, 0}, over = {1}},
+      font = "BerlinSansFB-Reg",
+      fontSize = 18,
+      defaultFile = "Images/buyBut.png",
+      overFile = "Images/buyButOver.png",
+      onEvent = purchase,
+		}
+    )
+	butGroup:insert(buyBut)
+  buyBut.anchorX = 0
+  buyBut.anchorY = 1
+  buyBut.y = buttBack.y - 35
+  buyBut.x = 5
+  
+  price = display.newText(options3)
+  price.anchorX = 0
+  price.anchorY = 0.5
+  price.x = buttBack.contentWidth + 5
+  price.y = display.contentHeight - (buttBack.contentHeight / 2)
+  
+  butGroup.anchorX = 0
+  butGroup.anchorY = 0
+  butGroup.x = 0
+  butGroup.y = display.contentHeight + 5
+  
+  descGroup.anchorX = 0
+  descGroup.anchorY = 0
+  descGroup.x = display.contentWidth + 5
+  descGroup.y = 0
+  
+  timer.performWithDelay(600, butMove)
+  timer.performWithDelay(600, butMove)
    
 
    -- Initialize the scene here.
@@ -156,6 +348,7 @@ function scene:hide( event )
       -- Insert code here to "pause" the scene.
       -- Example: stop timers, stop animation, stop audio, etc.
    elseif ( phase == "did" ) then
+     
       -- Called immediately after scene goes off screen.
    end
 end
@@ -164,6 +357,9 @@ end
 function scene:destroy( event )
 
    local sceneGroup = self.view
+   
+   butGroup:removeSelf()
+   descGroup:removeSelf()
 
    -- Called prior to the removal of scene's view ("sceneGroup").
    -- Insert code here to clean up the scene.

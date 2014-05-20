@@ -226,6 +226,13 @@ function scene:create( event )
   print("Times Opened "..timesOpen2.opened)
   
   storeSettings = loadsave.loadTable("store.json")
+  if (loadsave.loadTable("store.json") == nil) then
+    storeSettings = {}
+    storeSettings.trigPaid = false
+    storeSettings.sinePaid = false
+    storeSettings.boltPaid = false
+    loadsave.saveTable(storeSettings, "store.json")
+  end
 --  storeSettings.sinePaid = true
 --  storeSettings.trigPaid = true
 --  storeSettings.boltPaid = true
@@ -283,6 +290,8 @@ function scene:create( event )
   labelTable[7] = "Sine Bar"
   labelTable[8] = "Bolt Circle"
   
+  --begin code for IAP
+  
   if storeSettings.sinePaid then
     local temp = butTable[7]
     local temp2 = labelTable[7]
@@ -323,6 +332,7 @@ function scene:create( event )
     bought = bought + 1
   end
 
+  --End code for IAP
 
   menuList = widget.newTableView{
     left = logo.x + logo.contentWidth + 10,
