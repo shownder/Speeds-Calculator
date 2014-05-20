@@ -188,9 +188,9 @@ local function onRowTouch( event )
     if row > bought then
       going.num = "store"
       if goingTo[row] == 5 then
-        myData.showing = "right"
+        myData.showing = "trig"
       elseif goingTo[row] == 6 then
-        myData.showing = "oblique"
+        myData.showing = "trig"
       elseif goingTo[row] == 7 then
         myData.showing = "sine"
       elseif goingTo[row] == 8 then
@@ -226,9 +226,9 @@ function scene:create( event )
   print("Times Opened "..timesOpen2.opened)
   
   storeSettings = loadsave.loadTable("store.json")
-  storeSettings.sinePaid = true
+--  storeSettings.sinePaid = true
 --  storeSettings.trigPaid = true
-  storeSettings.boltPaid = true
+--  storeSettings.boltPaid = true
   
   going = {}
   goingTo = {}
@@ -282,21 +282,6 @@ function scene:create( event )
   labelTable[6] = "Oblique Triangle"
   labelTable[7] = "Sine Bar"
   labelTable[8] = "Bolt Circle"
-  
---  for i = 1, 4, 1 do
---    butTable2[i] = "1"
---    labelTable2[i] = "1"
---  end
---  
---  butTable2[1] = "Images/rightMenu.png"
---  butTable2[2] = "Images/obliqueMenu.png"
---  butTable2[3] = "Images/sineMenu.png"
---  butTable2[4] = "Images/boltMenu.png"
---  
---  labelTable2[1] = "Right Angle"
---  labelTable2[2] = "Oblique Triangle"
---  labelTable2[3] = "Sine Bar"
---  labelTable2[4] = "Bolt Circle"
   
   if storeSettings.sinePaid then
     local temp = butTable[7]
