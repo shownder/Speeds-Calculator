@@ -1,9 +1,10 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 local widget = require ( "widget" )
---widget.setTheme("widget_theme_ios")
+local store = require ("store")
 local loadsave = require("loadsave")
 local myData = require("myData")
+local device = require("device")
 display.setStatusBar(display.HiddenStatusBar)
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
@@ -20,12 +21,13 @@ local speedButt, speedLabel
 local counterButt, counterLabel
 local chartButt, chartLabel
 local matButt, matLabel
-local timesOpen2
+local timesOpen2, restoreBut
 local back
 local logo, facebookButt
 local topBar
 local scrollComplete, going, goingTo
 local bought, storeSettings
+local createTable, appleRestore, tableBuy, buyCount
 
 local butTable, labelTable, menuList
 
@@ -202,11 +204,125 @@ local function onRowTouch( event )
       going.num = row
     end
     
-    
-        
     print(row)
     print(going.num)
     sceneSelect()
+  end
+end
+
+local function transactionCallback( event )
+
+   print("In transactionCallback", event.transaction.state)
+   local transaction = event.transaction
+   local tstate = event.transaction.state
+   local product = event.transaction.productIdentifier
+   
+   if tstate == "purchased" then
+     tstate = "restored"
+   end
+
+   if  tstate == "restored" then
+      buyCount = buyCount + 1
+      print("Transaction restored (from previous session)")
+      if "com.speedfeed.iap.sine" == product then
+        storeSettings.sinePaid = true
+      elseif "com.speedfeed.iap.trig" == product then
+        storeSettings.trigPaid = true
+      elseif "com.speedfeed.iap.bolt" == product then
+        storeSettings.boltPaid = true
+--    elseif "com.speedfeed.iap.speed" == product then
+--      storeSettings.speedPaid = true
+      end
+      loadsave.saveTable(storeSettings, "store.json")
+       if buyCount == 1 then
+        timer.performWithDelay(1500, function() composer.gotoScene( "restorePage", { effect="fade", time=100} ); end)
+       end
+      store.finishTransaction( transaction )
+   elseif tstate == "refunded" then
+      print("User requested a refund -- locking app back")
+      if "com.speedfeed.iap.sine" == product then
+        storeSettings.sinePaid = false
+      elseif "com.speedfeed.iap.trig" == product then
+        storeSettings.trigPaid = false
+      elseif "com.speedfeed.iap.bolt" == product then
+        storeSettings.boltPaid = false
+--    elseif "com.speedfeed.iap.speed" == product then
+--      storeSettings.speedPaid = false
+      end
+      loadsave.saveTable(storeSettings, "store.json")
+      myData.refund = true
+      store.finishTransaction( transaction )
+   elseif tstate == "cancelled" then
+      print("User cancelled transaction")
+      store.finishTransaction( transaction )
+   elseif tstate == "failed" then
+      print("Transaction failed, type:", transaction.errorType, transaction.errorString)
+      native.showAlert("Failed", transaction.errorType.." - "..transaction.errorString, {"Okay"})
+      store.finishTransaction( transaction )
+   else
+      print("unknown event")
+      store.finishTransaction( transaction )
+   end
+   
+   print("done with store business for now")
+end
+
+appleRestore = function(event)
+  if event.phase == "ended" then
+    store.init( "apple", transactionCallback)
+    timer.performWithDelay(500, store.restore)
+  end
+end
+
+tableBuy = function()
+  
+  if storeSettings.sinePaid then
+    local temp = butTable[7]
+    local temp2 = labelTable[7]
+    table.insert(butTable, bought + 1, temp)
+    table.insert(labelTable, bought + 1, temp2)
+    table.remove(butTable, 8)
+    table.remove(labelTable, 8)    
+    bought = bought + 1
+  end
+  
+  if storeSettings.trigPaid then
+    local temp = butTable[5]
+    local temp2 = labelTable[5]
+    table.insert(butTable, bought + 1, temp)
+    table.insert(labelTable, bought + 1, temp2)
+    table.remove(butTable, 6)
+    table.remove(labelTable, 6)    
+    bought = bought + 1
+  end
+  
+  if storeSettings.trigPaid then
+    local temp = butTable[6]
+    local temp2 = labelTable[6]
+    table.insert(butTable, bought + 1, temp)
+    table.insert(labelTable, bought + 1, temp2)
+    table.remove(butTable, 7)
+    table.remove(labelTable, 7)    
+    bought = bought + 1
+  end
+  
+  if storeSettings.boltPaid then
+    local temp = butTable[8]
+    local temp2 = labelTable[8]
+    table.insert(butTable, bought + 1, temp)
+    table.insert(labelTable, bought + 1, temp2)
+    table.remove(butTable, 9)
+    table.remove(labelTable, 9)    
+    bought = bought + 1
+  end
+  
+  timer.performWithDelay(1500, createTable)
+end
+
+googleRefund = function()
+  
+  if myData.refund then
+    composer.gotoScene( "restorePage", { effect="fade", time=100} )
   end
 end
 
@@ -217,6 +333,8 @@ function scene:create( event )
 
   local sceneGroup = self.view
   myData.inch = false 
+  myData.refund = false
+  buyCount = 0
   timesOpen2 = loadsave.loadTable("timesOpen2.json")
   
   if timesOpen2.opened == 5 then
@@ -267,6 +385,27 @@ function scene:create( event )
   facebookButt.y = logo.y * 2
   facebookButt:addEventListener ( "touch", goingFacebook )
   
+  if device.isApple then
+    restoreBut = display.newImageRect(sceneGroup, "Images/restoreBut.png", 42, 42)
+    restoreBut.anchorX = 0
+    restoreBut.anchorY = 0.5
+    restoreBut.x = logo.x + facebookButt.contentWidth + 15
+    restoreBut.y = logo.y * 2
+    restoreBut.alpha = 0.6
+    restoreBut:addEventListener("touch", appleRestore)
+    
+    local restoreLabel = display.newText( { parent = sceneGroup, text = "Restore Purchases", 0, 0, font = "BerlinSansFB-Reg", fontSize = 14, width = 85, align = "center"})
+    restoreLabel.x = restoreBut.x + 21
+    restoreLabel.y = restoreBut.y + 40
+    restoreLabel:setFillColor(0.608, 0, 0, 0.6)
+  else
+    if store.availableStores.google then
+      store.init( "google", transactionCallback )
+      timer.performWithDelay( 300, store.restore)
+      timer.performWithDelay( 1500, googleRefund)
+    end
+  end
+    
   butTable = {}
   butTable2 = {}
   labelTable = {}
@@ -289,50 +428,6 @@ function scene:create( event )
   labelTable[6] = "Oblique Triangle"
   labelTable[7] = "Sine Bar"
   labelTable[8] = "Bolt Circle"
-  
-  --begin code for IAP
-  
-  if storeSettings.sinePaid then
-    local temp = butTable[7]
-    local temp2 = labelTable[7]
-    table.insert(butTable, bought + 1, temp)
-    table.insert(labelTable, bought + 1, temp2)
-    table.remove(butTable, 8)
-    table.remove(labelTable, 8)    
-    bought = bought + 1
-  end
-  
-  if storeSettings.trigPaid then
-    local temp = butTable[5]
-    local temp2 = labelTable[5]
-    table.insert(butTable, bought + 1, temp)
-    table.insert(labelTable, bought + 1, temp2)
-    table.remove(butTable, 6)
-    table.remove(labelTable, 6)    
-    bought = bought + 1
-  end
-  
-  if storeSettings.trigPaid then
-    local temp = butTable[6]
-    local temp2 = labelTable[6]
-    table.insert(butTable, bought + 1, temp)
-    table.insert(labelTable, bought + 1, temp2)
-    table.remove(butTable, 7)
-    table.remove(labelTable, 7)    
-    bought = bought + 1
-  end
-  
-  if storeSettings.boltPaid then
-    local temp = butTable[8]
-    local temp2 = labelTable[8]
-    table.insert(butTable, bought + 1, temp)
-    table.insert(labelTable, bought + 1, temp2)
-    table.remove(butTable, 9)
-    table.remove(labelTable, 9)    
-    bought = bought + 1
-  end
-
-  --End code for IAP
 
   menuList = widget.newTableView{
     left = logo.x + logo.contentWidth + 10,
@@ -346,7 +441,9 @@ function scene:create( event )
   }
   sceneGroup:insert(menuList)
   
-    for i = 1, 8, 1 do
+  tableBuy()
+  
+  for i = 1, 8, 1 do
     
     local isCategory = false
     local rowHeight = 65
