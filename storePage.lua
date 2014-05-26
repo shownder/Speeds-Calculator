@@ -4,6 +4,7 @@ local widget = require ( "widget" )
 local store = require ("store")
 local loadsave = require ("loadsave")
 local myData = require("myData")
+local device = require("device")
 
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
@@ -50,6 +51,9 @@ local function transactionCallback( event )
    local showing = myData.showing
 
    if tstate == "purchased" then
+     if not device.isApple then
+      storeSettings.buyCount = 1
+     end
       print("Transaction succuessful!")
       if "com.speedfeed.iap.sine" == product then
         storeSettings.sinePaid = true
@@ -200,7 +204,7 @@ function scene:create( event )
   descScroll = widget.newScrollView(
     {
       x = descBack.x,
-      y = descBack.y + 50,
+      y = 10,
       width = display.contentWidth / 2 - 50,
       height = display.contentHeight - 50,
       scrollWidth = 0,
@@ -213,12 +217,12 @@ function scene:create( event )
   descGroup:insert(descScroll)
   descScroll.anchorX, descScroll.anchorY = 1, 0
   descScroll.x = descBack.x
-  descScroll.y = descBack.y + 50
+  --descScroll.y = descBack.y + 50
   --descScroll.alpha = 0
   
   local options = {parent = descGroup, text="This is a test of the thing that I made ", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=18}
-  local options2 = {parent = descGroup, text="This is a Title", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=20}
-  local options3 = {parent = descGroup, text="$0.99 USD", x=0, y=0, width=descBack.contentWidth - 10, align="left", font="BerlinSansFB-Reg", fontSize=20}
+  local options2 = {parent = butGroup, text="This is a Title", x=0, y=0, font="BerlinSansFB-Reg", fontSize=22}
+  local options3 = {parent = butGroup, text="$0.99 USD", x=0, y=0, font="BerlinSansFB-Reg", fontSize=16}
   
   display.setDefault( "anchorX", 0 )
   display.setDefault( "anchorY", 0 )
@@ -230,9 +234,9 @@ function scene:create( event )
   desc.y = 0
   
   descTitle = display.newText(options2)
-  descTitle.x = display.contentWidth - descBack.contentWidth + 5
-  descTitle.y = 5
-  descTitle:setFillColor(0.15, 0.4, 0.729)
+  descTitle.x = 10
+  descTitle.y = display.viewableContentHeight - 55
+  descTitle:setFillColor(1)
   display.setDefault( "anchorX", 0.5 )
   display.setDefault( "anchorY", 0.5 )
   
@@ -250,11 +254,11 @@ function scene:create( event )
     descTitle.text = "Bolt Circle Calculator"
   end
   
-  buttBack = display.newRect(butGroup, 0, 0, 75, 65)
-  buttBack:setFillColor(1)
-  buttBack.anchorX = 0
-  buttBack.anchorY = 1
-  buttBack.y = display.contentHeight
+--  buttBack = display.newRect(butGroup, 0, 0, 75, 65)
+--  buttBack:setFillColor(1)
+--  buttBack.anchorX = 0
+--  buttBack.anchorY = 1
+--  buttBack.y = display.contentHeight
   
   backBut = widget.newButton(
     {
@@ -270,11 +274,11 @@ function scene:create( event )
       onEvent = goBack2,
 		}
     )
-	butGroup:insert(backBut)
-  backBut.anchorX = 0
+	descGroup:insert(backBut)
+  backBut.anchorX = 0.5
   backBut.anchorY = 1
-  backBut.y = buttBack.y - 5
-  backBut.x = 5
+  backBut.y = display.viewableContentHeight - 10
+  backBut.x = display.viewableContentWidth - (desc.contentWidth / 4)
   
   buyBut = widget.newButton(
     {
@@ -290,17 +294,17 @@ function scene:create( event )
       onEvent = purchase,
 		}
     )
-	butGroup:insert(buyBut)
-  buyBut.anchorX = 0
+	descGroup:insert(buyBut)
+  buyBut.anchorX = 0.5
   buyBut.anchorY = 1
-  buyBut.y = buttBack.y - 35
-  buyBut.x = 5
+  buyBut.y = display.viewableContentHeight - 10
+  buyBut.x = display.viewableContentWidth - ((desc.contentWidth / 4) * 3)
   
   price = display.newText(options3)
   price.anchorX = 0
-  price.anchorY = 0.5
-  price.x = buttBack.contentWidth + 5
-  price.y = display.contentHeight - (buttBack.contentHeight / 2)
+  price.anchorY = 1
+  price.x = 10
+  price.y = display.viewableContentHeight - 10
   
   butGroup.anchorX = 0
   butGroup.anchorY = 0

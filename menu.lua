@@ -85,7 +85,7 @@ local function alertListener ( event )
       loadsave.saveTable(timesOpen2, "timesOpen2.json")
       local options =
         {
-          iOSAppId = "687225532",
+          iOSAppId = "737001001",
           supportedAndroidStores = { "google" },
         }
         
@@ -94,7 +94,7 @@ local function alertListener ( event )
         local version = system.getInfo("platformVersion")
         version = string.sub(version, 1, 3)
         if tonumber(version) >= 7.1 then
-          system.openURL("http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=687225532&pageNumber=0&sortOrdering=2&type=Purple+Software&mt=8")
+          system.openURL("http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=737001001&pageNumber=0&sortOrdering=2&type=Purple+Software&mt=8")
         else
           native.showPopup("rateApp", options)
         end
@@ -222,7 +222,7 @@ local function transactionCallback( event )
    end
 
    if  tstate == "restored" then
-      buyCount = buyCount + 1
+      storeSettings.buyCount = storeSettings.buyCount + 1
       print("Transaction restored (from previous session)")
       if "com.speedfeed.iap.sine" == product then
         storeSettings.sinePaid = true
@@ -234,7 +234,7 @@ local function transactionCallback( event )
 --      storeSettings.speedPaid = true
       end
       loadsave.saveTable(storeSettings, "store.json")
-       if buyCount == 1 then
+       if storeSettings.buyCount == 1 then
         timer.performWithDelay(1500, function() composer.gotoScene( "restorePage", { effect="fade", time=100} ); end)
        end
       store.finishTransaction( transaction )
@@ -334,7 +334,6 @@ function scene:create( event )
   local sceneGroup = self.view
   myData.inch = false 
   myData.refund = false
-  buyCount = 0
   timesOpen2 = loadsave.loadTable("timesOpen2.json")
   
   if timesOpen2.opened == 5 then
@@ -349,8 +348,15 @@ function scene:create( event )
     storeSettings.trigPaid = false
     storeSettings.sinePaid = false
     storeSettings.boltPaid = false
+    storeSettings.buyCount = 0
     loadsave.saveTable(storeSettings, "store.json")
   end
+  
+  if storeSettings.buyCount == nil then
+    storeSettings.buyCount = 0
+    loadsave.saveTable(storeSettings, "store.json")
+  end
+  
 --  storeSettings.sinePaid = true
 --  storeSettings.trigPaid = true
 --  storeSettings.boltPaid = true
@@ -385,7 +391,9 @@ function scene:create( event )
   facebookButt.y = logo.y * 2
   facebookButt:addEventListener ( "touch", goingFacebook )
   
-  if device.isApple then
+  print(storeSettings.buyCount)
+  
+  if device.isApple and storeSettings.buyCount < 1 then
     restoreBut = display.newImageRect(sceneGroup, "Images/restoreBut.png", 42, 42)
     restoreBut.anchorX = 0
     restoreBut.anchorY = 0.5
@@ -461,9 +469,9 @@ function scene:create( event )
     )
   end
 
---  if not composer.getSceneName( "previous" ) then
---    timer.performWithDelay(500, moveItems)
---  end
+  if not composer.getSceneName( "previous" ) then
+    timer.performWithDelay(500, moveItems)
+  end
 
      
 end
