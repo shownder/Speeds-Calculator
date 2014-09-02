@@ -5,6 +5,7 @@ local store = require ("store")
 local loadsave = require("loadsave")
 local myData = require("myData")
 local device = require("device")
+local analytics = require( "analytics" )
 display.setStatusBar(display.HiddenStatusBar)
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
@@ -34,28 +35,39 @@ local butTable, labelTable, menuList
 local function sceneSelect()
 
    	if going.num == 5 then
+      analytics.logEvent( "Right_Angle" )
 		composer.gotoScene( "rightAngle", { effect="fromTop", time=800} )
 		elseif going.num == 6 then
+      analytics.logEvent( "Oblique" )
 		composer.gotoScene( "oblique", { effect="fromTop", time=800} )
 		elseif going.num == 7 then
+      analytics.logEvent( "Sine_Bar" )
 		composer.gotoScene( "sineBar", { effect="fromTop", time=800} )
 		elseif going.num == 8 then
+      analytics.logEvent( "Bolt" )
 		composer.gotoScene( "bolt", { effect="fromTop", time=800} )
 		elseif going.num == 1 then
+      analytics.logEvent( "Speed" )
 		composer.gotoScene( "speedFeed", { effect="fromTop", time=800} )
     elseif going.num == 2 then
+      analytics.logEvent( "Counter_Sink" )
 		composer.gotoScene( "counter", { effect="fromTop", time=800} )
     elseif going.num == 3 then
+      analytics.logEvent( "Charts" )
 		composer.gotoScene( "charts", { effect="fromTop", time=800, params = {isOverlay = false}} )
     elseif going.num == 4 then
+      analytics.logEvent( "Materials_List" )
 		composer.gotoScene( "materials", { effect="fromTop", time=800, params = {isOverlay = false}} )
     elseif going.num == "store" then
+      analytics.logEvent( "Store" )
 		composer.gotoScene( "storePage", { effect="fromTop", time=800} )
    	end
 end
 
 local function goingFacebook ( event )
 	local phase = event.phase 
+
+  analytics.logEvent( "Facebook" ) 
 
     if (not system.openURL("fb://profile/187552938002070")) then
       system.openURL("http://www.facebook.com/pages/Machinists-Calculator/187552938002070")
@@ -469,8 +481,11 @@ function scene:create( event )
     )
   end
 
-  if not composer.getSceneName( "previous" ) then
+  local menuOpened = loadsave.loadTable("menuOpen.json")
+  if menuOpened.opened == false then
     timer.performWithDelay(500, moveItems)
+    menuOpened.opened = true
+    loadsave.saveTable(menuOpened, "menuOpen.json")
   end
 
      

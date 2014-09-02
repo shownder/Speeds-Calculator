@@ -16,8 +16,11 @@ local loadsave = require("loadsave")
 local device = require("device")
 local licensing = require( "licensing" )
 local composer = require( "composer" )
+local analytics = require( "analytics" )
 
 if not device.isApple then
+
+analytics.init( "SVYW97RKY2FGFTXPRG5M" )
 
 licensing.init( "google" )
 
@@ -45,8 +48,19 @@ end
 licensing.verify( licensingListener )
 end
 
+if device.isApple then
+  analytics.init( "5DDRNDRSG5ZW4T8X28ZR" )
+end
+
 local timesOpen2 = loadsave.loadTable("timesOpen2.json")
+local menuOpened = loadsave.loadTable("menuOpen.json")
 --timesOpen2.opened = 4
+
+if (menuOpened == nil) then
+    menuOpened = {}
+    menuOpened.opened = false
+    loadsave.saveTable(menuOpened, "menuOpen.json")
+end
   
   if (timesOpen2 == nil) then
     timesOpen2 = {}
