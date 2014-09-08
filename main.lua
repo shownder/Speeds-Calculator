@@ -20,7 +20,7 @@ local analytics = require( "analytics" )
 
 if not device.isApple then
 
-analytics.init( "SVYW97RKY2FGFTXPRG5M" )
+analytics.init( "5DDRNDRSG5ZW4T8X28ZR" )
 
 licensing.init( "google" )
 
@@ -49,7 +49,7 @@ licensing.verify( licensingListener )
 end
 
 if device.isApple then
-  analytics.init( "5DDRNDRSG5ZW4T8X28ZR" )
+  analytics.init( "SVYW97RKY2FGFTXPRG5M" )
 end
 
 local timesOpen2 = loadsave.loadTable("timesOpen2.json")
