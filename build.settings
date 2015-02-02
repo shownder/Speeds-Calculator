@@ -1,14 +1,23 @@
 settings =
 {
   plugins =
-    {
-        -- key is the name passed to Lua's 'require()'
-        ["CoronaProvider.analytics.flurry"] =
+  {
+    ["plugin.amazon.iap"] =
+      {
+          -- required
+          publisherId = "com.amazon",
+      },
+    ["CoronaProvider.analytics.flurry"] =
+      {
+          -- required
+          publisherId = "com.coronalabs",
+      },
+      ["plugin.google.iap.v3"] =
         {
-            -- required
             publisherId = "com.coronalabs",
+            supportedPlatforms = { android=true }
         },
-    },
+  },
 	orientation =
 	{
 		default = "landscapeRight",

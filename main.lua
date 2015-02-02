@@ -18,7 +18,7 @@ local licensing = require( "licensing" )
 local composer = require( "composer" )
 local analytics = require( "analytics" )
 
-if not device.isApple then
+if ( system.getInfo( "platformName" ) == "Android" ) then
 
 analytics.init( "5DDRNDRSG5ZW4T8X28ZR" )
 
@@ -35,7 +35,6 @@ local function alertListener ( event )
 end
 
 local function licensingListener( event )
-
    local verified = event.isVerified
    if not event.isVerified then
       --failed verify app from the play store, we print a message
@@ -75,7 +74,7 @@ end
   end
  
 print(system.getInfo("model") .. " " .. system.getInfo("platformVersion"))
-if device.isApple then
+if device.isApple or device.isSimulator then
   composer.gotoScene( "menu")
 end
 

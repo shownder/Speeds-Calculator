@@ -1,7 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 local widget = require ( "widget" )
-local store = require ("store")
 local loadsave = require ("loadsave")
 local myData = require("myData")
 local device = require("device")
@@ -17,6 +16,9 @@ local back, example, descBack, desc, descTitle, descScroll, buttBack, buyBut, ba
 local goBack2, butMove, goBack
 local backEdgeX, backEdgeY
 local showing
+local store
+local v3 = false
+
 
 ---------------------------------------------------------------------------------
 
@@ -115,15 +117,29 @@ local function purchase( event )
     
     if showing == "sine" then
       print("Purchase Sine")
-      store.purchase({"com.speedfeed.iap.sine"})
-      --store.purchase({"android.test.purchased"})
+      if v3 == false then 
+        store.purchase({"com.speedfeed.iap.sine"})
+      else
+        store.purchase("com.speedfeed.iap.sine")
+        --store.purchase({"android.test.purchased"})
+      end
     elseif showing == "trig" then
       print("Purchase Speed")
-      store.purchase({"com.speedfeed.iap.trig"})
+      if v3 == false then 
+        store.purchase({"com.speedfeed.iap.trig"})
+      else
+        store.purchase("com.speedfeed.iap.trig")
+        --store.purchase({"android.test.purchased"})
+      end
       --store.purchase({"android.test.canceled"})
     elseif showing == "bolt" then
       print("Purchase Bolt")
-      store.purchase({"com.speedfeed.iap.bolt"})
+      if v3 == false then 
+        store.purchase({"com.speedfeed.iap.bolt"})
+      else
+        store.purchase("com.speedfeed.iap.bolt")
+        --store.purchase({"android.test.purchased"})
+      end
       --store.purchase({"android.test.item_unavailable"})
     elseif showing == "speed" then
       --purchasing speed
@@ -162,13 +178,17 @@ function scene:create( event )
    
   Runtime:addEventListener( "key", onKeyEvent )
   
-  storeSettings = loadsave.loadTable("store.json")
-  if store.availableStores.apple then
-      timer.performWithDelay(1000, function() store.init( "apple", transactionCallback); end)
-  end
-  if store.availableStores.google then
-      timer.performWithDelay( 1000, function() store.init( "google", transactionCallback ); end)
-  end
+storeSettings = loadsave.loadTable("store.json")
+if ( system.getInfo( "platformName" ) == "Android" ) then
+    store = require( "plugin.google.iap.v3" )
+    v3 = true
+    timer.performWithDelay( 1000, function() store.init( "google", transactionCallback ); end)
+elseif ( system.getInfo( "platformName" ) == "iPhone OS" ) then
+    store = require( "store" )
+    timer.performWithDelay(1000, function() store.init( "apple", transactionCallback); end)
+else
+    native.showAlert( "Notice", "In-app purchases are not supported in the Corona Simulator.", { "OK" } )
+end
   
   descGroup = display.newGroup()
   butGroup = display.newGroup()
