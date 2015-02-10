@@ -63,8 +63,6 @@ local function transactionCallback( event )
         storeSettings.trigPaid = true
       elseif "com.speedfeed.iap.bolt" == product then
         storeSettings.boltPaid = true
---      elseif "com.speedfeed.iap.speed" == product then
---        storeSettings.speedPaid = true
       end
       loadsave.saveTable(storeSettings, "store.json")
       native.showAlert("Success", "Function is now unlocked!", {"Okay"}, onComplete)

@@ -1,7 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 local widget = require ( "widget" )
-local store = require ("store")
 local loadsave = require("loadsave")
 local myData = require("myData")
 local device = require("device")
@@ -237,18 +236,16 @@ local function transactionCallback( event )
 
    if  tstate == "restored" then
       storeSettings.buyCount = storeSettings.buyCount + 1
-      print("Transaction restored (from previous session)")
       if "com.speedfeed.iap.sine" == product then
         storeSettings.sinePaid = true
       elseif "com.speedfeed.iap.trig" == product then
         storeSettings.trigPaid = true
       elseif "com.speedfeed.iap.bolt" == product then
         storeSettings.boltPaid = true
---    elseif "com.speedfeed.iap.speed" == product then
---      storeSettings.speedPaid = true
       end
       loadsave.saveTable(storeSettings, "store.json")
        if storeSettings.buyCount == 1 then
+        print("Going to Restore Page")
         timer.performWithDelay(1500, function() composer.gotoScene( "restorePage", { effect="fade", time=100} ); end)
        end
       store.finishTransaction( transaction )
